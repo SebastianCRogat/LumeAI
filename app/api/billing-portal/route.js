@@ -2,7 +2,11 @@ import { NextResponse } from "next/server";
 import Stripe from "stripe";
 import { createSupabaseClient } from "@/lib/supabase-server";
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
+function getStripe() {
+  const key = process.env.STRIPE_SECRET_KEY;
+  if (!key) throw new Error("Stripe is not configured");
+  return new Stripe(key);
+}
 
 export async function POST(request) {
   const authHeader = request.headers.get("authorization");
@@ -19,6 +23,7 @@ export async function POST(request) {
     if (!customerId) return NextResponse.json({ error: "No subscription found" }, { status: 400 });
 
     const { returnUrl } = await request.json().catch(() => ({}));
+    const stripe = getStripe();
     const session = await stripe.billingPortal.sessions.create({
       customer: customerId,
       return_url: returnUrl || (request.nextUrl?.origin || process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000") + "/dashboard",

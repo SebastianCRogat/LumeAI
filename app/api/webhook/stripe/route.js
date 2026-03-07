@@ -2,7 +2,11 @@ import { NextResponse } from "next/server";
 import Stripe from "stripe";
 import { createClient } from "@supabase/supabase-js";
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
+function getStripe() {
+  const key = process.env.STRIPE_SECRET_KEY;
+  if (!key) throw new Error("Stripe is not configured");
+  return new Stripe(key);
+}
 const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
 
 const supabaseAdmin = createClient(
@@ -20,12 +24,14 @@ export async function POST(request) {
 
   let event;
   try {
+    const stripe = getStripe();
     event = stripe.webhooks.constructEvent(body, sig, webhookSecret);
   } catch (e) {
     return NextResponse.json({ error: e.message }, { status: 400 });
   }
 
   try {
+    const stripe = getStripe();
     if (event.type === "checkout.session.completed") {
       const session = event.data.object;
       const userId = session.metadata?.user_id;

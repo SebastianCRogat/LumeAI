@@ -2,7 +2,11 @@ import { NextResponse } from "next/server";
 import Stripe from "stripe";
 import { createSupabaseClient } from "@/lib/supabase-server";
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
+function getStripe() {
+  const key = process.env.STRIPE_SECRET_KEY;
+  if (!key) throw new Error("Stripe is not configured");
+  return new Stripe(key);
+}
 
 export async function POST(request) {
   const authHeader = request.headers.get("authorization");
@@ -17,6 +21,7 @@ export async function POST(request) {
   }
 
   try {
+    const stripe = getStripe();
     const supabase = createSupabaseClient(token);
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
