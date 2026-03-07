@@ -79,7 +79,7 @@ export default function AnalysisPage() {
       <div style={{ padding: "12px 24px", borderBottom: "1px solid " + BD + "50" }}>
         <Link href="/dashboard" style={{ fontSize: 12, color: "inherit", textDecoration: "none" }}>← Dashboard</Link>
       </div>
-      <AnalysisResultView data={result} canExport={tier === "pro" || tier === "business"} />
+      <AnalysisResultView data={result} />
     </AppLayout>
   );
 }

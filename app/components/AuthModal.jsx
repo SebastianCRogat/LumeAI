@@ -1,9 +1,7 @@
 "use client";
 import { useState } from "react";
 import { supabase } from "@/lib/supabase";
-
-var BG = "#0a0e17", PN = "#111827", CD = "#1a2235", BD = "#2a3654", AC = "#f97316";
-var TX = "#e2e8f0", MU = "#8896b3", DM = "#5a6a8a", GR = "#22c55e", RD = "#ef4444";
+import { BG, PN, CD, BD, TX, MU, DM, AC, RD, GR, BTN_RADIUS, CARD_RADIUS } from "@/lib/theme";
 
 export default function AuthModal({ onClose, onSuccess }) {
   const [mode, setMode] = useState("signin");
@@ -41,7 +39,7 @@ export default function AuthModal({ onClose, onSuccess }) {
       style={{
         position: "fixed",
         inset: 0,
-        background: "rgba(0,0,0,0.7)",
+        background: "rgba(0,0,0,0.85)",
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
@@ -51,22 +49,23 @@ export default function AuthModal({ onClose, onSuccess }) {
     >
       <div
         style={{
-          background: PN,
+          background: CD,
           border: "1px solid " + BD,
-          borderRadius: 8,
+          borderRadius: CARD_RADIUS,
           padding: 24,
           width: "100%",
           maxWidth: 360,
+          boxShadow: "0 8px 32px rgba(0,0,0,0.5)",
         }}
         onClick={(e) => e.stopPropagation()}
       >
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
-          <span style={{ fontFamily: "monospace", fontWeight: 700, fontSize: 14, color: AC }}>
-            {mode === "signin" ? "SIGN IN" : "SIGN UP"}
+          <span style={{ fontSize: 11, fontWeight: 800, letterSpacing: 1.2, color: AC, textTransform: "uppercase" }}>
+            {mode === "signin" ? "Sign in" : "Sign up"}
           </span>
           <button
             onClick={onClose}
-            style={{ background: "none", border: "none", color: DM, cursor: "pointer", fontSize: 18 }}
+            style={{ background: "none", border: "none", color: DM, cursor: "pointer", fontSize: 20 }}
           >
             ×
           </button>
@@ -78,13 +77,14 @@ export default function AuthModal({ onClose, onSuccess }) {
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             required
+            autoComplete="email"
             style={{
               width: "100%",
-              padding: "10px 12px",
+              padding: "12px 14px",
               marginBottom: 10,
-              background: CD,
+              background: BG,
               border: "1px solid " + BD,
-              borderRadius: 4,
+              borderRadius: BTN_RADIUS,
               color: TX,
               fontSize: 13,
               boxSizing: "border-box",
@@ -97,13 +97,14 @@ export default function AuthModal({ onClose, onSuccess }) {
             onChange={(e) => setPassword(e.target.value)}
             required
             minLength={6}
+            autoComplete={mode === "signin" ? "current-password" : "new-password"}
             style={{
               width: "100%",
-              padding: "10px 12px",
+              padding: "12px 14px",
               marginBottom: 16,
-              background: CD,
+              background: BG,
               border: "1px solid " + BD,
-              borderRadius: 4,
+              borderRadius: BTN_RADIUS,
               color: TX,
               fontSize: 13,
               boxSizing: "border-box",
@@ -116,12 +117,11 @@ export default function AuthModal({ onClose, onSuccess }) {
             disabled={loading}
             style={{
               width: "100%",
-              padding: "10px",
+              padding: "12px",
               background: loading ? BD : AC,
-              color: loading ? DM : BG,
+              color: loading ? DM : "#0F0F0F",
               border: "none",
-              borderRadius: 4,
-              fontFamily: "monospace",
+              borderRadius: BTN_RADIUS,
               fontWeight: 700,
               fontSize: 12,
               cursor: loading ? "wait" : "pointer",

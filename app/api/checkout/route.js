@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import Stripe from "stripe";
 import { createSupabaseClient } from "@/lib/supabase-server";
+import { checkRateLimit, getClientIp, RATE_LIMITS, rateLimitResponse } from "@/lib/rateLimit";
+import { validateCheckoutBody } from "@/lib/validate";
 
 function getStripe() {
   const key = process.env.STRIPE_SECRET_KEY;
@@ -9,16 +11,27 @@ function getStripe() {
 }
 
 export async function POST(request) {
+  const ip = getClientIp(request);
+  const { allowed, retryAfter } = checkRateLimit("checkout:" + ip, RATE_LIMITS.default);
+  if (!allowed) return rateLimitResponse(retryAfter ?? 60);
+
   const authHeader = request.headers.get("authorization");
   const token = authHeader?.startsWith("Bearer ") ? authHeader.slice(7) : null;
   if (!token) {
     return NextResponse.json({ error: "Sign in required" }, { status: 401 });
   }
 
-  const { priceId, successUrl, cancelUrl } = await request.json();
-  if (!priceId || !successUrl || !cancelUrl) {
-    return NextResponse.json({ error: "Missing priceId, successUrl, or cancelUrl" }, { status: 400 });
+  let body;
+  try {
+    body = await request.json();
+  } catch {
+    return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
   }
+  const validated = validateCheckoutBody(body);
+  if ("error" in validated) {
+    return NextResponse.json({ error: validated.error }, { status: validated.status });
+  }
+  const { priceId, successUrl, cancelUrl } = validated;
 
   try {
     const stripe = getStripe();

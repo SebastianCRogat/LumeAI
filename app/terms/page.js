@@ -1,7 +1,6 @@
 "use client";
-import Link from "next/link";
 import AppLayout from "@/app/components/AppLayout";
-import { BD, AC, TX, MU } from "@/lib/theme";
+import { TX, MU } from "@/lib/theme";
 
 function Section({ title, children }) {
   return (
@@ -51,9 +50,6 @@ export default function TermsPage() {
           These Terms are governed by the laws of Denmark. Any disputes shall be resolved in the courts of Denmark, unless mandatory consumer protection laws in your jurisdiction require otherwise.
         </Section>
 
-        <div style={{ marginTop: 32, paddingTop: 24, borderTop: "1px solid " + BD + "50" }}>
-          <Link href="/legal" style={{ fontSize: 12, color: AC, textDecoration: "none", fontWeight: 500 }}>← Legal & Disclaimers</Link>
-        </div>
       </div>
     </AppLayout>
   );

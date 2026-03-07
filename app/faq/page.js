@@ -1,7 +1,6 @@
 "use client";
-import Link from "next/link";
 import AppLayout from "@/app/components/AppLayout";
-import { CD, BD, AC, TX, MU, DM, CARD_RADIUS } from "@/lib/theme";
+import { CD, BD, TX, MU, DM, CARD_RADIUS } from "@/lib/theme";
 
 const FAQ_ITEMS = [
   {
@@ -21,8 +20,8 @@ const FAQ_ITEMS = [
     a: "Go to Dashboard and click 'Manage subscription'. You'll be taken to Stripe's billing portal where you can cancel, update payment methods, or view invoices.",
   },
   {
-    q: "Can I export my analyses?",
-    a: "Pro and Business plans include PDF export. Saved analyses are available in your Dashboard and can be revisited anytime.",
+    q: "Can I revisit my analyses?",
+    a: "Yes. All your analyses are saved in your Dashboard and can be revisited anytime.",
   },
   {
     q: "What regions does Lume support?",
@@ -50,11 +49,6 @@ export default function FAQPage() {
           ))}
         </div>
 
-        <div style={{ marginTop: 40, paddingTop: 24, borderTop: "1px solid " + BD + "50", display: "flex", gap: 24, flexWrap: "wrap" }}>
-          <Link href="/legal" style={{ fontSize: 12, color: AC, textDecoration: "none", fontWeight: 500 }}>Legal & Disclaimers →</Link>
-          <Link href="/terms" style={{ fontSize: 12, color: AC, textDecoration: "none", fontWeight: 500 }}>Terms of Service →</Link>
-          <Link href="/privacy" style={{ fontSize: 12, color: AC, textDecoration: "none", fontWeight: 500 }}>Privacy Policy →</Link>
-        </div>
       </div>
     </AppLayout>
   );

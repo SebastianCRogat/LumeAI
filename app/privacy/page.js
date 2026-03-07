@@ -1,7 +1,6 @@
 "use client";
-import Link from "next/link";
 import AppLayout from "@/app/components/AppLayout";
-import { BD, AC, TX, MU } from "@/lib/theme";
+import { TX, MU } from "@/lib/theme";
 
 function Section({ title, children }) {
   return (
@@ -60,9 +59,6 @@ export default function PrivacyPage() {
           We may update this Privacy Policy. Material changes will be communicated via email or in-app notice. Continued use after changes constitutes acceptance.
         </Section>
 
-        <div style={{ marginTop: 32, paddingTop: 24, borderTop: "1px solid " + BD + "50" }}>
-          <Link href="/legal" style={{ fontSize: 12, color: AC, textDecoration: "none", fontWeight: 500 }}>← Legal & Disclaimers</Link>
-        </div>
       </div>
     </AppLayout>
   );

@@ -1,30 +1,31 @@
 import { NextResponse } from "next/server";
-import { getMockData, getDeepMockData, buildPrompt, buildDeepPrompt, cleanJSON } from "@/lib/analysis";
+import { getMockData, getDeepMockData, buildPrompt, buildDeepPrompt, cleanJSON, sanitizeResult } from "@/lib/analysis";
 import { createSupabaseClient } from "@/lib/supabase-server";
 import { getLimit } from "@/lib/usage";
 import { FULL_ACCESS_USER_ID } from "@/lib/constants";
+import { checkRateLimit, getClientIp, RATE_LIMITS, rateLimitResponse } from "@/lib/rateLimit";
+import { validateAnalyzeBody } from "@/lib/validate";
 
 export async function POST(request) {
+  // Rate limit by IP (OWASP: prevent abuse)
+  const ip = getClientIp(request);
+  const { allowed, retryAfter } = checkRateLimit("analyze:" + ip, RATE_LIMITS.analyze);
+  if (!allowed) return rateLimitResponse(retryAfter ?? 60);
+
   const authHeader = request.headers.get("authorization");
   const token = authHeader?.startsWith("Bearer ") ? authHeader.slice(7) : null;
 
-  const { idea, deep } = await request.json();
-  if (!idea || !idea.trim()) {
-    return NextResponse.json({ error: "Please provide a business idea" }, { status: 400 });
+  let body;
+  try {
+    body = await request.json();
+  } catch {
+    return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
   }
-  const trimmed = idea.trim();
-  if (trimmed.length > 500) {
-    return NextResponse.json({ error: "Input must be 500 characters or less" }, { status: 400 });
+  const validated = validateAnalyzeBody(body);
+  if ("error" in validated) {
+    return NextResponse.json({ error: validated.error }, { status: validated.status });
   }
-  if (trimmed.length < 10) {
-    return NextResponse.json({ error: "Please describe your business idea in a few words (e.g. 'Meal kits in Denmark')" }, { status: 400 });
-  }
-  const wordCount = trimmed.split(/\s+/).filter(Boolean).length;
-  if (wordCount < 2) {
-    return NextResponse.json({ error: "Please describe your idea with at least 2 words (e.g. 'Dog food EU')" }, { status: 400 });
-  }
-
-  const isDeep = !!deep;
+  const { idea: trimmed, deep: isDeep } = validated;
   let tier = "free";
   let userId = null;
 
@@ -79,6 +80,7 @@ export async function POST(request) {
     return NextResponse.json({ error: "Sign in required to run research. Explore sample data or sign in and upgrade to Pro." }, { status: 401 });
   }
 
+  // API key only from env; never expose to client (OWASP: secure key handling)
   const apiKey = process.env.ANTHROPIC_API_KEY;
   const useOpus = isDeep || tier === "pro" || tier === "business" || userId === FULL_ACCESS_USER_ID;
   let result;
@@ -102,20 +104,27 @@ export async function POST(request) {
       const data = await res.json();
       if (data.error) throw new Error(data.error.message);
 
+      if (data.stop_reason === "max_tokens") {
+        console.warn("AI response truncated (hit max_tokens). Model:", useOpus ? "opus" : "haiku", "Deep:", isDeep);
+      }
+
       let txt = "";
       for (const block of data.content || []) {
         if (block.type === "text") txt += block.text;
       }
 
       const parsed = cleanJSON(txt);
-      if (!parsed) throw new Error("Could not parse AI response. Try again.");
-      result = parsed;
+      if (!parsed) {
+        console.error("cleanJSON failed. Raw length:", txt.length, "First 200 chars:", txt.substring(0, 200));
+        throw new Error("Could not parse AI response. Try again.");
+      }
+      result = sanitizeResult(parsed);
     } catch (e) {
       return NextResponse.json({ error: e.message }, { status: 500 });
     }
   } else {
     await new Promise((r) => setTimeout(r, isDeep ? 1500 : 800));
-    result = isDeep ? getDeepMockData(trimmed) : getMockData(trimmed);
+    result = sanitizeResult(isDeep ? getDeepMockData(trimmed) : getMockData(trimmed));
   }
 
   if (token) {

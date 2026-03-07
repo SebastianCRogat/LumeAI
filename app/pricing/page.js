@@ -6,8 +6,8 @@ import { BG, PN, CD, BD, AC, TX, MU, DM, GR, BL, CARD_RADIUS } from "@/lib/theme
 
 const PLANS = [
   { id: "free", name: "Free", price: "$0", period: "/month", standard: 0, deep: 0, model: "—", features: ["Explore sample analyses (no sign-in)", "No live research", "Upgrade to Pro for real analyses"], cta: "Current plan", highlight: false },
-  { id: "pro", name: "Pro", price: "$39", period: "/month", standard: 10, deep: 1, model: "Claude Opus", features: ["10 analyses + 1 deep research/month", "Full competitor analysis", "Pie chart & ad snapshots", "Verified sources & links", "PDF export", "Analysis history"], cta: "Upgrade to Pro", highlight: true, priceId: process.env.NEXT_PUBLIC_STRIPE_PRICE_PRO },
-  { id: "business", name: "Business", price: "$99", period: "/month", standard: 50, deep: 5, model: "Claude Opus", features: ["50 analyses + 5 deep research/month", "Everything in Pro", "White-label PDF (your branding)", "5× more analyses", "5× more deep research"], cta: "Upgrade to Business", highlight: false, priceId: process.env.NEXT_PUBLIC_STRIPE_PRICE_BUSINESS },
+  { id: "pro", name: "Pro", price: "$39", period: "/month", standard: 10, deep: 1, model: "Claude Opus", features: ["10 analyses + 1 deep research/month", "Full competitor analysis", "Pie chart & ad snapshots", "Verified sources & links", "Analysis history"], cta: "Upgrade to Pro", highlight: true, priceId: process.env.NEXT_PUBLIC_STRIPE_PRICE_PRO },
+  { id: "business", name: "Business", price: "$99", period: "/month", standard: 50, deep: 5, model: "Claude Opus", features: ["50 analyses + 5 deep research/month", "Everything in Pro", "5× more analyses", "5× more deep research"], cta: "Upgrade to Business", highlight: false, priceId: process.env.NEXT_PUBLIC_STRIPE_PRICE_BUSINESS },
 ];
 
 export default function PricingPage() {

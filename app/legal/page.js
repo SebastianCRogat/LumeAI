@@ -1,7 +1,6 @@
 "use client";
-import Link from "next/link";
 import AppLayout from "@/app/components/AppLayout";
-import { BD, AC, TX, MU } from "@/lib/theme";
+import { TX, MU } from "@/lib/theme";
 
 function Section({ title, children }) {
   return (
@@ -40,11 +39,6 @@ export default function LegalPage() {
           </p>
         </Section>
 
-        <div style={{ marginTop: 40, paddingTop: 24, borderTop: "1px solid " + BD + "50", display: "flex", gap: 24, flexWrap: "wrap" }}>
-          <Link href="/faq" style={{ fontSize: 12, color: AC, textDecoration: "none", fontWeight: 500 }}>FAQ →</Link>
-          <Link href="/terms" style={{ fontSize: 12, color: AC, textDecoration: "none", fontWeight: 500 }}>Terms of Service →</Link>
-          <Link href="/privacy" style={{ fontSize: 12, color: AC, textDecoration: "none", fontWeight: 500 }}>Privacy Policy →</Link>
-        </div>
       </div>
     </AppLayout>
   );

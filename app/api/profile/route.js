@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { createSupabaseClient } from "@/lib/supabase-server";
 import { FULL_ACCESS_USER_ID } from "@/lib/constants";
+import { checkRateLimit, getClientIp, RATE_LIMITS, rateLimitResponse } from "@/lib/rateLimit";
+import { validateProfilePatchBody } from "@/lib/validate";
 
 export async function GET(request) {
   const authHeader = request.headers.get("authorization");
@@ -22,6 +24,10 @@ export async function GET(request) {
 }
 
 export async function PATCH(request) {
+  const ip = getClientIp(request);
+  const { allowed, retryAfter } = checkRateLimit("profile:" + ip, RATE_LIMITS.default);
+  if (!allowed) return rateLimitResponse(retryAfter ?? 60);
+
   const authHeader = request.headers.get("authorization");
   const token = authHeader?.startsWith("Bearer ") ? authHeader.slice(7) : null;
   if (!token) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -36,8 +42,11 @@ export async function PATCH(request) {
   } catch {
     return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
   }
-  const display_name = typeof body.display_name === "string" ? body.display_name.trim().slice(0, 100) : null;
-  if (!display_name) return NextResponse.json({ error: "display_name required" }, { status: 400 });
+  const validated = validateProfilePatchBody(body);
+  if ("error" in validated) {
+    return NextResponse.json({ error: validated.error }, { status: validated.status });
+  }
+  const { display_name } = validated;
 
   const { error } = await supabase.from("profiles").upsert(
     { id: user.id, display_name, email: user.email, updated_at: new Date().toISOString() },
