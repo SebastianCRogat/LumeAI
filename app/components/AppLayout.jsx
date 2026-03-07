@@ -101,27 +101,41 @@ export default function AppLayout({ children }) {
   return (
     <div
       style={{
-        minHeight: "100vh",
-        background: OUTER_BG,
+        height: "100vh",
+        background: `
+          radial-gradient(ellipse 60% 50% at 55% 50%, rgba(0,180,255,0.25) 0%, transparent 70%),
+          radial-gradient(ellipse 40% 40% at 60% 45%, rgba(0,230,255,0.15) 0%, transparent 60%),
+          radial-gradient(ellipse 80% 60% at 50% 50%, rgba(20,60,200,0.4) 0%, transparent 70%),
+          linear-gradient(160deg, #0a0a2e 0%, #0c1a5e 30%, #1040a0 50%, #0c1a5e 70%, #0a0a2e 100%)
+        `,
         color: TX,
         fontFamily: "system-ui,sans-serif",
         padding: "24px 20px",
         boxSizing: "border-box",
+        overflow: "hidden",
       }}
     >
       <div
         style={{
           maxWidth: 1400,
+          height: "100%",
           margin: "0 auto",
           background: BG,
           borderRadius: 24,
-          boxShadow: "0 32px 100px rgba(0,0,0,0.45), 0 12px 40px rgba(0,0,0,0.3)",
-          overflow: "hidden",
+          boxShadow: "0 40px 120px rgba(0,0,0,0.7), 0 16px 50px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.05)",
           display: "flex",
           flexDirection: "column",
-          minHeight: "calc(100vh - 48px)",
+          overflow: "hidden",
         }}
       >
+        <div
+          style={{
+            flex: 1,
+            overflowY: "auto",
+            overflowX: "hidden",
+            minHeight: 0,
+          }}
+        >
         <header
           style={{
             background: PN,
@@ -130,6 +144,9 @@ export default function AppLayout({ children }) {
             alignItems: "center",
             justifyContent: "space-between",
             borderBottom: "1px solid " + BD + "50",
+            position: "sticky",
+            top: 0,
+            zIndex: 10,
           }}
         >
           <div style={{ display: "flex", alignItems: "center", gap: 20 }}>
@@ -306,13 +323,13 @@ export default function AppLayout({ children }) {
             display: "flex",
             flexDirection: "column",
             minWidth: 0,
-            overflow: "auto",
           }}
         >
           {children}
         </main>
 
         <LegalFooter />
+        </div>
       </div>
     </div>
   );
