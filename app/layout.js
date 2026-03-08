@@ -1,5 +1,5 @@
 import { AuthProvider } from "./context/AuthContext";
-import { Analytics } from "@vercel/analytics/react";
+import { Analytics } from "@vercel/analytics/next";
 
 export const metadata = {
   title: "Lume — Market Research Engine",
