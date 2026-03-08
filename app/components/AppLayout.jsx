@@ -134,10 +134,14 @@ export default function AppLayout({ children }) {
             overflowY: "auto",
             overflowX: "hidden",
             minHeight: 0,
+            display: "flex",
+            flexDirection: "column",
           }}
         >
+        <div style={{ display: "flex", flexDirection: "column", minHeight: "100%", flex: 1 }}>
         <header
           style={{
+            flexShrink: 0,
             background: PN,
             padding: "14px 24px",
             display: "flex",
@@ -320,6 +324,7 @@ export default function AppLayout({ children }) {
         <main
           style={{
             flex: 1,
+            minHeight: 0,
             display: "flex",
             flexDirection: "column",
             minWidth: 0,
@@ -328,7 +333,10 @@ export default function AppLayout({ children }) {
           {children}
         </main>
 
-        <LegalFooter />
+        <div style={{ flexShrink: 0 }}>
+          <LegalFooter />
+        </div>
+        </div>
         </div>
       </div>
     </div>
