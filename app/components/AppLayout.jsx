@@ -323,8 +323,7 @@ export default function AppLayout({ children }) {
 
         <main
           style={{
-            flex: 1,
-            minHeight: 0,
+            flex: "1 1 auto",
             display: "flex",
             flexDirection: "column",
             minWidth: 0,

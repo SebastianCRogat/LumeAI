@@ -427,7 +427,7 @@ export function AnalysisResultView({data,isSampleData}){
   var sm=data?(data.summary||{}):{};
   var vc={"HIGH POTENTIAL":GR,MODERATE:YL,RISKY:RD,NICHE:CN};
   var tabContent={market:<TabMarket d={data}/>,product:<TabProd d={data}/>,competitor:<TabComp d={data}/>,assumptions:<TabAssume d={data}/>,legal:<TabLegal d={data}/>};
-  return(<div style={{flex:1,display:"flex",flexDirection:"column",minHeight:0,overflow:"hidden"}}>
+  return(<div style={{display:"flex",flexDirection:"column"}}>
     <div style={{padding:24,paddingBottom:0}}>
       <BentoCard title="Summary" span="span 1">
         <div style={{display:"flex",alignItems:"flex-start",gap:20,flexWrap:"wrap"}}>
@@ -442,7 +442,7 @@ export function AnalysisResultView({data,isSampleData}){
       </BentoCard>
     </div>
     <TabBar active={activeTab} onChange={setActiveTab}/>
-    <div style={{flex:1,padding:24,overflowY:"auto"}}>
+    <div style={{padding:24,paddingTop:0}}>
       <BentoCard title={activeTab.charAt(0).toUpperCase()+activeTab.slice(1)}>{tabContent[activeTab]}</BentoCard>
     </div>
   </div>);
