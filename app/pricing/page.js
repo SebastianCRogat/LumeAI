@@ -1,28 +1,56 @@
 "use client";
 import { useState, useEffect } from "react";
+import { useSearchParams } from "next/navigation";
 import { useAuth } from "@/app/context/AuthContext";
 import AppLayout from "@/app/components/AppLayout";
 import { BG, PN, CD, BD, AC, TX, MU, DM, GR, BL, CARD_RADIUS } from "@/lib/theme";
 
 const PLANS = [
-  { id: "free", name: "Free", price: "$0", period: "/month", standard: 0, deep: 0, model: "—", features: ["Explore sample analyses (no sign-in)", "No live research", "Upgrade to Pro for real analyses"], cta: "Current plan", highlight: false },
+  { id: "free", name: "Free", price: "$0", period: "/month", standard: 1, deep: 0, model: "Claude Haiku", features: ["1 free analysis per month", "Basic AI model (Haiku)", "Explore sample analyses", "Upgrade to Pro for full power"], cta: "Free", highlight: false },
   { id: "pro", name: "Pro", price: "$39", period: "/month", standard: 10, deep: 1, model: "Claude Opus", features: ["10 analyses + 1 deep research/month", "Full competitor analysis", "Pie chart & ad snapshots", "Verified sources & links", "Analysis history"], cta: "Upgrade to Pro", highlight: true, priceId: process.env.NEXT_PUBLIC_STRIPE_PRICE_PRO },
   { id: "business", name: "Business", price: "$99", period: "/month", standard: 50, deep: 5, model: "Claude Opus", features: ["50 analyses + 5 deep research/month", "Everything in Pro", "5× more analyses", "5× more deep research"], cta: "Upgrade to Business", highlight: false, priceId: process.env.NEXT_PUBLIC_STRIPE_PRICE_BUSINESS },
 ];
 
+function fetchTier(session) {
+  return fetch("/api/profile", { headers: { Authorization: "Bearer " + session.access_token } })
+    .then((r) => r.json())
+    .then((d) => d.tier || "free");
+}
+
 export default function PricingPage() {
+  const searchParams = useSearchParams();
   const { user, session, loading: authLoading } = useAuth();
   const [tier, setTier] = useState("free");
   const [loading, setLoading] = useState(null);
 
   useEffect(() => {
     if (user && session) {
-      fetch("/api/profile", { headers: { Authorization: "Bearer " + session.access_token } })
-        .then((r) => r.json())
-        .then((d) => d.tier && setTier(d.tier))
-        .catch(() => {});
+      fetchTier(session).then((t) => setTier(t)).catch(() => {});
     }
   }, [user, session]);
+
+  // After checkout redirect, webhook may not have run yet: poll profile until tier updates
+  useEffect(() => {
+    const success = searchParams.get("success") === "1";
+    if (!success || !user || !session) return;
+    let count = 0;
+    const maxPolls = 6;
+    const interval = setInterval(() => {
+      count += 1;
+      fetchTier(session).then((t) => {
+        setTier(t);
+        if (t !== "free" || count >= maxPolls) {
+          clearInterval(interval);
+          if (typeof window !== "undefined" && count >= maxPolls) {
+            const u = new URL(window.location.href);
+            u.searchParams.delete("success");
+            window.history.replaceState({}, "", u.pathname + u.search);
+          }
+        }
+      }).catch(() => {});
+    }, 2000);
+    return () => clearInterval(interval);
+  }, [searchParams, user, session]);
 
   async function handleUpgrade(plan) {
     const priceId = plan.priceId;
@@ -41,7 +69,7 @@ export default function PricingPage() {
         headers: { "Content-Type": "application/json", Authorization: "Bearer " + session.access_token },
         body: JSON.stringify({
           priceId,
-          successUrl: window.location.origin + "/dashboard?success=1",
+          successUrl: window.location.origin + "/pricing?success=1",
           cancelUrl: window.location.origin + "/pricing",
         }),
       });

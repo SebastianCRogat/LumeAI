@@ -4,6 +4,7 @@ import { usePathname } from "next/navigation";
 import { useState } from "react";
 import { useAuth } from "@/app/context/AuthContext";
 import { supabase } from "@/lib/supabase";
+import { useIsMobile } from "@/lib/useMediaQuery";
 import AuthModal from "./AuthModal";
 import LegalFooter from "./LegalFooter";
 import {
@@ -93,10 +94,55 @@ export default function AppLayout({ children }) {
   const pathname = usePathname();
   const { user, displayName } = useAuth();
   const [showAuth, setShowAuth] = useState(false);
+  const [navOpen, setNavOpen] = useState(false);
+  const isMobile = useIsMobile();
 
   const isResearch = pathname === "/";
   const isDashboard = pathname === "/dashboard";
   const isPricing = pathname === "/pricing";
+
+  const navLinks = (
+    <>
+      <Link href="/" onClick={() => isMobile && setNavOpen(false)} style={{ display: "flex", alignItems: "center", gap: 8, padding: isMobile ? "14px 16px" : "8px 16px", borderRadius: BTN_RADIUS, fontSize: 12, fontWeight: 600, color: isResearch ? TX : MU, textDecoration: "none", background: isResearch ? CD : "transparent", border: "none" }}>
+        <IconCheckBox />
+        <span>Research</span>
+      </Link>
+      <Link href="/dashboard" onClick={() => isMobile && setNavOpen(false)} style={{ display: "flex", alignItems: "center", gap: 8, padding: isMobile ? "14px 16px" : "8px 16px", borderRadius: BTN_RADIUS, fontSize: 12, fontWeight: 600, color: isDashboard ? TX : MU, textDecoration: "none", background: isDashboard ? CD : "transparent", border: "none" }}>
+        <IconChart />
+        <span>Dashboard</span>
+      </Link>
+      <Link href="/pricing" onClick={() => isMobile && setNavOpen(false)} style={{ display: "flex", alignItems: "center", gap: 8, padding: isMobile ? "14px 16px" : "8px 16px", borderRadius: BTN_RADIUS, fontSize: 12, fontWeight: 600, color: isPricing ? TX : MU, textDecoration: "none", background: isPricing ? CD : "transparent", border: "none" }}>
+        <IconPricing />
+        <span>Pricing</span>
+      </Link>
+    </>
+  );
+
+  const userSection = user ? (
+    <>
+      {!isMobile && (
+        <Link href="/profile" style={{ textAlign: "right", textDecoration: "none", color: "inherit" }}>
+          <div style={{ fontSize: 13, fontWeight: 600, color: TX }}>{displayName || "User"}</div>
+          <div style={{ fontSize: 11, color: DM }}>{"@" + (displayName || "user").toLowerCase().replace(/\s+/g, "")}</div>
+        </Link>
+      )}
+      <Link href="/profile" onClick={() => isMobile && setNavOpen(false)} style={{ width: 40, height: 40, borderRadius: "50%", background: BD, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14, fontWeight: 700, color: TX, textDecoration: "none" }}>
+        {(displayName || "U")[0].toUpperCase()}
+      </Link>
+      <button onClick={() => supabase.auth.signOut()} style={{ padding: "8px 14px", background: CD, border: "1px solid " + BD, borderRadius: BTN_RADIUS, fontSize: 11, fontWeight: 600, color: MU, cursor: "pointer" }}>
+        Sign out
+      </button>
+    </>
+  ) : (
+    <>
+      <Link href="/pricing" onClick={() => isMobile && setNavOpen(false)} style={{ fontSize: 12, fontWeight: 600, color: MU, textDecoration: "none", padding: "8px 14px", background: CD, borderRadius: BTN_RADIUS }}>
+        Pricing
+      </Link>
+      <button onClick={() => { setShowAuth(true); setNavOpen(false); }} style={{ padding: "8px 18px", background: AC, color: BG, border: "none", borderRadius: BTN_RADIUS, fontWeight: 700, fontSize: 12, cursor: "pointer" }}>
+        Sign in
+      </button>
+    </>
+  );
 
   return (
     <div
@@ -110,7 +156,7 @@ export default function AppLayout({ children }) {
         `,
         color: TX,
         fontFamily: "system-ui,sans-serif",
-        padding: "24px 20px",
+        padding: isMobile ? "12px 10px" : "24px 20px",
         boxSizing: "border-box",
         overflow: "hidden",
       }}
@@ -121,7 +167,7 @@ export default function AppLayout({ children }) {
           height: "100%",
           margin: "0 auto",
           background: BG,
-          borderRadius: 24,
+          borderRadius: isMobile ? 16 : 24,
           boxShadow: "0 40px 120px rgba(0,0,0,0.7), 0 16px 50px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.05)",
           display: "flex",
           flexDirection: "column",
@@ -139,11 +185,11 @@ export default function AppLayout({ children }) {
           }}
         >
         <div style={{ display: "flex", flexDirection: "column", minHeight: "100%", flex: 1 }}>
+        <div style={{ position: "relative", flexShrink: 0 }}>
         <header
           style={{
-            flexShrink: 0,
             background: PN,
-            padding: "14px 24px",
+            padding: isMobile ? "12px 16px" : "14px 24px",
             display: "flex",
             alignItems: "center",
             justifyContent: "space-between",
@@ -153,166 +199,52 @@ export default function AppLayout({ children }) {
             zIndex: 10,
           }}
         >
-          <div style={{ display: "flex", alignItems: "center", gap: 20 }}>
-            <Link
-              href="/"
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: 10,
-                textDecoration: "none",
-                color: "inherit",
-              }}
-            >
-              <LumeLogo size={32} />
+          <div style={{ display: "flex", alignItems: "center", gap: isMobile ? 12 : 20 }}>
+            <Link href="/" style={{ display: "flex", alignItems: "center", gap: 10, textDecoration: "none", color: "inherit" }}>
+              <LumeLogo size={isMobile ? 28 : 32} />
             </Link>
-            <nav style={{ display: "flex", alignItems: "center", gap: 6 }}>
-              <Link
-                href="/"
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 8,
-                  padding: "8px 16px",
-                  borderRadius: BTN_RADIUS,
-                  fontSize: 12,
-                  fontWeight: 600,
-                  color: isResearch ? TX : MU,
-                  textDecoration: "none",
-                  background: isResearch ? CD : "transparent",
-                  border: "none",
-                }}
-              >
-                <IconCheckBox />
-                <span>Research</span>
-              </Link>
-              <Link
-                href="/dashboard"
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 8,
-                  padding: "8px 16px",
-                  borderRadius: BTN_RADIUS,
-                  fontSize: 12,
-                  fontWeight: 600,
-                  color: isDashboard ? TX : MU,
-                  textDecoration: "none",
-                  background: isDashboard ? CD : "transparent",
-                  border: "none",
-                }}
-              >
-                <IconChart />
-                <span>Dashboard</span>
-              </Link>
-              <Link
-                href="/pricing"
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 8,
-                  padding: "8px 16px",
-                  borderRadius: BTN_RADIUS,
-                  fontSize: 12,
-                  fontWeight: 600,
-                  color: isPricing ? TX : MU,
-                  textDecoration: "none",
-                  background: isPricing ? CD : "transparent",
-                  border: "none",
-                }}
-              >
-                <IconPricing />
-                <span>Pricing</span>
-              </Link>
-            </nav>
+            {!isMobile && <nav style={{ display: "flex", alignItems: "center", gap: 6 }}>{navLinks}</nav>}
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
-            {user ? (
-              <>
-                <Link
-                  href="/profile"
-                  style={{
-                    textAlign: "right",
-                    textDecoration: "none",
-                    color: "inherit",
-                  }}
-                >
-                  <div style={{ fontSize: 13, fontWeight: 600, color: TX }}>
-                    {displayName || "User"}
-                  </div>
-                  <div style={{ fontSize: 11, color: DM }}>
-                    {"@" + (displayName || "user").toLowerCase().replace(/\s+/g, "")}
-                  </div>
-                </Link>
-                <Link
-                  href="/profile"
-                  style={{
-                    width: 40,
-                    height: 40,
-                    borderRadius: "50%",
-                    background: BD,
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    fontSize: 14,
-                    fontWeight: 700,
-                    color: TX,
-                    textDecoration: "none",
-                  }}
-                >
-                  {(displayName || "U")[0].toUpperCase()}
-                </Link>
-                <button
-                  onClick={() => supabase.auth.signOut()}
-                  style={{
-                    padding: "8px 14px",
-                    background: CD,
-                    border: "1px solid " + BD,
-                    borderRadius: BTN_RADIUS,
-                    fontSize: 11,
-                    fontWeight: 600,
-                    color: MU,
-                    cursor: "pointer",
-                  }}
-                >
-                  Sign out
-                </button>
-              </>
-            ) : (
-              <>
-                <Link
-                  href="/pricing"
-                  style={{
-                    fontSize: 12,
-                    fontWeight: 600,
-                    color: MU,
-                    textDecoration: "none",
-                    padding: "8px 14px",
-                    background: CD,
-                    borderRadius: BTN_RADIUS,
-                  }}
-                >
-                  Pricing
-                </Link>
-                <button
-                  onClick={() => setShowAuth(true)}
-                  style={{
-                    padding: "8px 18px",
-                    background: AC,
-                    color: BG,
-                    border: "none",
-                    borderRadius: BTN_RADIUS,
-                    fontWeight: 700,
-                    fontSize: 12,
-                    cursor: "pointer",
-                  }}
-                >
-                  Sign in
-                </button>
-              </>
+            {!isMobile && userSection}
+            {isMobile && (
+              <button
+                onClick={() => setNavOpen((o) => !o)}
+                style={{ width: 44, height: 44, padding: 0, display: "flex", alignItems: "center", justifyContent: "center", background: navOpen ? CD : "transparent", border: "1px solid " + BD, borderRadius: BTN_RADIUS, cursor: "pointer", color: TX }}
+                aria-label="Menu"
+              >
+                <svg width={20} height={20} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+                  {navOpen ? <path d="M18 6L6 18M6 6l12 12" /> : <path d="M3 12h18M3 6h18M3 18h18" />}
+                </svg>
+              </button>
             )}
           </div>
         </header>
+
+        {isMobile && navOpen && (
+          <div
+            style={{
+              position: "absolute",
+              top: "100%",
+              left: 0,
+              right: 0,
+              zIndex: 20,
+              background: PN,
+              borderBottom: "1px solid " + BD + "50",
+              padding: "12px 16px 20px",
+              display: "flex",
+              flexDirection: "column",
+              gap: 4,
+              boxShadow: "0 12px 24px rgba(0,0,0,0.4)",
+            }}
+          >
+            <nav style={{ display: "flex", flexDirection: "column", gap: 2 }}>{navLinks}</nav>
+            <div style={{ borderTop: "1px solid " + BD + "50", marginTop: 8, paddingTop: 12, display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
+              {userSection}
+            </div>
+          </div>
+        )}
+        </div>
 
         {showAuth && (
           <AuthModal

@@ -67,7 +67,7 @@ export async function POST(request) {
           if (limit.standard !== Infinity) {
             const used = usage?.standard_count || 0;
             if (used >= limit.standard) {
-              return NextResponse.json({ error: "No free analyses. Explore sample data or upgrade to Pro for live research." }, { status: 429 });
+              return NextResponse.json({ error: "You've used your free analysis. Upgrade to Pro for more research.", upgrade: true }, { status: 429 });
             }
           }
         }
@@ -83,6 +83,9 @@ export async function POST(request) {
   // API key only from env; never expose to client (OWASP: secure key handling)
   const apiKey = process.env.ANTHROPIC_API_KEY;
   const useOpus = isDeep || tier === "pro" || tier === "business" || userId === FULL_ACCESS_USER_ID;
+  const isFree = tier === "free" && userId !== FULL_ACCESS_USER_ID;
+  const model = isFree ? "claude-haiku-4-5" : (useOpus ? "claude-opus-4-6" : "claude-haiku-4-5");
+  const maxTokens = isDeep ? 16000 : (isFree ? 3000 : 8000);
   let result;
 
   if (apiKey) {
@@ -95,8 +98,8 @@ export async function POST(request) {
           "anthropic-version": "2023-06-01",
         },
         body: JSON.stringify({
-          model: useOpus ? "claude-opus-4-6" : "claude-haiku-4-5",
-          max_tokens: isDeep ? 16000 : 8000,
+          model,
+          max_tokens: maxTokens,
           messages: [{ role: "user", content: isDeep ? buildDeepPrompt(trimmed) : buildPrompt(trimmed) }],
         }),
       });
@@ -105,7 +108,7 @@ export async function POST(request) {
       if (data.error) throw new Error(data.error.message);
 
       if (data.stop_reason === "max_tokens") {
-        console.warn("AI response truncated (hit max_tokens). Model:", useOpus ? "opus" : "haiku", "Deep:", isDeep);
+        console.warn("AI response truncated (hit max_tokens). Model:", model, "Deep:", isDeep, "Tier:", tier);
       }
 
       let txt = "";
@@ -137,7 +140,7 @@ export async function POST(request) {
         await supabase.from("analyses").insert({
           user_id: user.id,
           idea: trimmed,
-          model_used: apiKey ? (useOpus ? "opus" : "haiku") : "mock",
+          model_used: apiKey ? model : "mock",
           result,
           tier_at_creation: tier,
         });
