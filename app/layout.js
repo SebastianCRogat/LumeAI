@@ -1,4 +1,5 @@
 import { AuthProvider } from "./context/AuthContext";
+import { Analytics } from "@vercel/analytics/react";
 
 export const metadata = {
   title: "Lume — Market Research Engine",
@@ -10,6 +11,7 @@ export default function RootLayout({ children }) {
     <html lang="en">
       <body>
         <AuthProvider>{children}</AuthProvider>
+        <Analytics />
       </body>
     </html>
   );
