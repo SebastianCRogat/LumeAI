@@ -4,7 +4,12 @@ import { Analytics } from "@vercel/analytics/next";
 export const metadata = {
   title: "Lume — Market Research Engine",
   description: "AI-powered market research for entrepreneurs and businesses",
-  viewport: "width=device-width, initial-scale=1, maximum-scale=5",
+};
+
+export const viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 5,
 };
 
 export default function RootLayout({ children }) {

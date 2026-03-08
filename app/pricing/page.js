@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { useAuth } from "@/app/context/AuthContext";
 import AppLayout from "@/app/components/AppLayout";
@@ -17,7 +17,7 @@ function fetchTier(session) {
     .then((d) => d.tier || "free");
 }
 
-export default function PricingPage() {
+function PricingContent() {
   const searchParams = useSearchParams();
   const { user, session, loading: authLoading } = useAuth();
   const [tier, setTier] = useState("free");
@@ -136,5 +136,13 @@ export default function PricingPage() {
         </div>
       </div>
     </AppLayout>
+  );
+}
+
+export default function PricingPage() {
+  return (
+    <Suspense fallback={<AppLayout><div style={{ maxWidth: 900, margin: "0 auto", padding: 40, flex: 1, textAlign: "center", color: DM }}>Loading...</div></AppLayout>}>
+      <PricingContent />
+    </Suspense>
   );
 }
