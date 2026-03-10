@@ -42,6 +42,32 @@ body {
   to { transform: rotate(360deg); }
 }
 
+@keyframes lume-free-glow {
+  0%, 100% { box-shadow: 0 4px 24px rgba(249, 115, 22, 0.12); }
+  50% { box-shadow: 0 6px 28px rgba(249, 115, 22, 0.18); }
+}
+
+@keyframes lume-shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+.lume-gradient-shimmer {
+  background: linear-gradient(
+    90deg,
+    #ea580c 0%,
+    #f97316 25%,
+    #fbbf24 50%,
+    #f97316 75%,
+    #ea580c 100%
+  );
+  background-size: 200% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation: lume-shimmer 3s linear infinite;
+}
+
 /* Mobile: hide scrollbar on tab bar */
 .lume-tabs-scroll {
   -ms-overflow-style: none;
