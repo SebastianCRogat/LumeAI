@@ -53,9 +53,8 @@ export async function POST(request) {
         tier = profile?.tier || "free";
         const limit = getLimit(tier, user.id);
         const month = new Date().toISOString().slice(0, 7);
-        const { data: usage } = await supabase.from("usage").select("standard_count, deep_count").eq("user_id", user.id).eq("month", month).maybeSingle();
-
         if (isDeep) {
+          const { data: usage } = await supabase.from("usage").select("deep_count").eq("user_id", user.id).eq("month", month).maybeSingle();
           if (limit.deep === 0) {
             return NextResponse.json({ error: "Deep research requires Pro or Business. Upgrade to unlock." }, { status: 403 });
           }
@@ -64,10 +63,17 @@ export async function POST(request) {
             return NextResponse.json({ error: `You've used your ${limit.deep} deep research this month. Resets next month.` }, { status: 429 });
           }
         } else {
-          if (limit.standard !== Infinity) {
+          if (tier === "free" && userId !== FULL_ACCESS_USER_ID) {
+            const { data: allUsage } = await supabase.from("usage").select("standard_count").eq("user_id", user.id);
+            const totalStandard = (allUsage || []).reduce((sum, row) => sum + (row.standard_count || 0), 0);
+            if (totalStandard >= 1) {
+              return NextResponse.json({ error: "You've used your free analysis. Upgrade to Pro for more research.", upgrade: true }, { status: 429 });
+            }
+          } else if (limit.standard !== Infinity) {
+            const { data: usage } = await supabase.from("usage").select("standard_count").eq("user_id", user.id).eq("month", month).maybeSingle();
             const used = usage?.standard_count || 0;
             if (used >= limit.standard) {
-              return NextResponse.json({ error: "You've used your free analysis. Upgrade to Pro for more research.", upgrade: true }, { status: 429 });
+              return NextResponse.json({ error: "You've used your analyses this month. Resets next month or upgrade for more." }, { status: 429 });
             }
           }
         }
@@ -85,7 +91,7 @@ export async function POST(request) {
   const useOpus = isDeep || tier === "pro" || tier === "business" || userId === FULL_ACCESS_USER_ID;
   const isFree = tier === "free" && userId !== FULL_ACCESS_USER_ID;
   const model = isFree ? "claude-haiku-4-5" : (useOpus ? "claude-opus-4-6" : "claude-haiku-4-5");
-  const maxTokens = isDeep ? 16000 : (isFree ? 3000 : 8000);
+  const maxTokens = isDeep ? 16000 : 8000;
   let result;
 
   if (apiKey) {

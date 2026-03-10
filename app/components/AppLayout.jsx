@@ -147,6 +147,8 @@ export default function AppLayout({ children }) {
   return (
     <div
       style={{
+        width: "100%",
+        maxWidth: "100vw",
         height: "100vh",
         background: `
           radial-gradient(ellipse 60% 50% at 55% 50%, rgba(0,180,255,0.25) 0%, transparent 70%),
@@ -156,22 +158,24 @@ export default function AppLayout({ children }) {
         `,
         color: TX,
         fontFamily: "system-ui,sans-serif",
-        padding: isMobile ? "12px 10px" : "24px 20px",
+        padding: isMobile ? "8px 6px" : "24px 20px",
         boxSizing: "border-box",
         overflow: "hidden",
       }}
     >
       <div
         style={{
+          width: "100%",
           maxWidth: 1400,
           height: "100%",
           margin: "0 auto",
           background: BG,
-          borderRadius: isMobile ? 16 : 24,
+          borderRadius: isMobile ? 12 : 24,
           boxShadow: "0 40px 120px rgba(0,0,0,0.7), 0 16px 50px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.05)",
           display: "flex",
           flexDirection: "column",
           overflow: "hidden",
+          minWidth: 0,
         }}
       >
         <div
@@ -180,11 +184,13 @@ export default function AppLayout({ children }) {
             overflowY: "auto",
             overflowX: "hidden",
             minHeight: 0,
+            minWidth: 0,
             display: "flex",
             flexDirection: "column",
+            width: "100%",
           }}
         >
-        <div style={{ display: "flex", flexDirection: "column", minHeight: "100%", flex: 1 }}>
+        <div style={{ display: "flex", flexDirection: "column", minHeight: "100%", flex: 1, minWidth: 0, width: "100%" }}>
         <div style={{ position: "relative", flexShrink: 0 }}>
         <header
           style={{
@@ -259,6 +265,8 @@ export default function AppLayout({ children }) {
             display: "flex",
             flexDirection: "column",
             minWidth: 0,
+            width: "100%",
+            overflowX: "hidden",
           }}
         >
           {children}

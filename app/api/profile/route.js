@@ -16,10 +16,17 @@ export async function GET(request) {
   if (user.id === FULL_ACCESS_USER_ID) return NextResponse.json({ tier: "business", email: user.email, display_name: user.email?.split("@")[0] || "User" });
 
   const { data: profile } = await supabase.from("profiles").select("tier, display_name, email").eq("id", user.id).single();
+  const tier = profile?.tier || "free";
+  let free_analyses_used = null;
+  if (tier === "free") {
+    const { data: allUsage } = await supabase.from("usage").select("standard_count").eq("user_id", user.id);
+    free_analyses_used = (allUsage || []).reduce((sum, row) => sum + (row.standard_count || 0), 0);
+  }
   return NextResponse.json({
-    tier: profile?.tier || "free",
+    tier,
     display_name: profile?.display_name || user.email?.split("@")[0] || "User",
     email: profile?.email || user.email || "",
+    ...(free_analyses_used !== null && { free_analyses_used }),
   });
 }
 

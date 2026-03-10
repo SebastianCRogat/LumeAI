@@ -37,7 +37,9 @@ function isUrl(s){if(!s||typeof s!=="string")return false;var t=s.trim();return 
 
 function LumeLogo({size}){var s=size||24;return(<svg width={s} height={s} viewBox="0 0 32 32" fill="none"><rect width={32} height={32} rx={8} fill={BG}/><path d="M10 22V10h3v12h6v2H10z" fill={TX}/><path d="M22 14.5c0-.8.6-1.5 1.4-1.5.8 0 1.4.7 1.4 1.5v5c0 .8-.6 1.5-1.4 1.5-.8 0-1.4-.7-1.4-1.5v-5z" fill={TX} opacity={0.6}/></svg>);}
 
-function parseMarketValue(s){if(!s||typeof s!=="string")return "—";var i=s.indexOf("(");var v=(i>0?s.slice(0,i).trim():s.trim())||"—";return v;}
+function parseMarketValue(s){if(!s||typeof s!=="string")return "—";var t=s.trim();var m=t.match(/(\$|USD|EUR|DKK|€|CZK|GBP)\s*(\d+(?:\.\d+)?)\s*([BMK])?/i);if(m){var cur=m[1].replace(/^~?\s*/,""),num=m[2],scale=(m[3]||"").toUpperCase();return cur+" "+num+scale;}m=t.match(/(\d+(?:\.\d+)?)\s*([BMK])\b/);if(m)return m[1]+m[2];return "—";}
+function parseCagr(s){if(!s||typeof s!=="string")return "—";var m=String(s).match(/(\d+(?:\.\d+)?)\s*%?/);return m?m[1]+"%":"—";}
+function parseMaturity(s){if(!s||typeof s!=="string")return "—";var t=String(s).trim();var one=t.match(/^(EMERGING|GROWING|MATURE|DECLINING|NICHE)/i);if(one)return one[1].toUpperCase();var first=t.split(/\s+/)[0];return first&&first.length<=12?first.toUpperCase():"—";}
 function Badge({children,color}){var c=color||AC;return(<span style={{fontSize:10,fontWeight:700,letterSpacing:0.5,color:c,background:c+"20",padding:"4px 10px",borderRadius:BTN_RADIUS,border:"none"}}>{children}</span>);}
 function Stat({label,value,color,expandable,maxLength,trend}){var isUp=trend==="up";var isDown=trend==="down";return(<div style={{padding:SPACE.lg,background:PN+"88",borderRadius:CARD_RADIUS,border:"none"}}><div style={{fontSize:10,color:DM,fontWeight:800,letterSpacing:0.5,marginBottom:SPACE.sm,textTransform:"uppercase"}}>{label}</div>{expandable?<ExpandableText text={value||"N/A"} maxLength={maxLength||60} style={{fontSize:18,fontWeight:700,color:color||TX,lineHeight:1.35,display:"block"}}/>:(<div style={{display:"flex",alignItems:"center",gap:6,flexWrap:"wrap"}}><span style={{fontSize:18,fontWeight:700,color:color||TX,lineHeight:1.35}}>{value||"N/A"}</span>{(isUp||isDown)&&<span style={{display:"inline-flex",alignItems:"center"}}>{isUp&&<svg width={14} height={14} viewBox="0 0 12 12" fill="none"><path d="M6 3v6M3 6l3-3 3 3" stroke={GR} strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round"/></svg>}{isDown&&<svg width={14} height={14} viewBox="0 0 12 12" fill="none"><path d="M6 9V3M3 6l3 3 3-3" stroke={AC} strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round"/></svg>}</span>}</div>)}</div>);}
 function Head({title}){return(<div style={{marginBottom:SPACE.md,marginTop:SPACE.xl}}><span style={{fontSize:11,fontWeight:800,letterSpacing:1.2,color:DM,textTransform:"uppercase"}}>{title}</span></div>);}
@@ -54,7 +56,7 @@ function ExpandableText({text,maxLength,style}){
   );
 }
 
-function BentoCard({title,children,span}){return(<div style={{gridColumn:span||"span 1",background:CD,borderRadius:CARD_RADIUS,padding:0,boxShadow:"0 4px 24px rgba(0,0,0,0.4)",border:"1px solid "+BD+"40",overflow:"hidden"}}>{title&&<div style={{display:"flex",alignItems:"center",padding:SPACE.md+"px "+SPACE.lg+"px",borderBottom:"1px solid "+BD+"60"}}><span style={{fontSize:11,fontWeight:800,letterSpacing:1.5,color:TX,textTransform:"uppercase"}}>{title}</span></div>}<div style={{padding:SPACE.xl}}>{children}</div></div>);}
+function BentoCard({title,children,span}){return(<div style={{gridColumn:span||"span 1",background:CD,borderRadius:CARD_RADIUS,padding:0,boxShadow:"0 4px 24px rgba(0,0,0,0.4)",border:"1px solid "+BD+"40",overflow:"hidden",minWidth:0}}>{title&&<div style={{display:"flex",alignItems:"center",padding:SPACE.md+"px "+SPACE.lg+"px",borderBottom:"1px solid "+BD+"60"}}><span style={{fontSize:11,fontWeight:800,letterSpacing:1.5,color:TX,textTransform:"uppercase"}}>{title}</span></div>}<div style={{padding:SPACE.xl}}>{children}</div></div>);}
 function ArrowUp(){return(<svg width={12} height={12} viewBox="0 0 12 12" fill="none" style={{display:"block",marginBottom:2}}><path d="M6 3v6M3 6l3-3 3 3" stroke={GR} strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round"/></svg>);}
 function ArrowDown(){return(<svg width={12} height={12} viewBox="0 0 12 12" fill="none" style={{display:"block",marginBottom:2}}><path d="M6 9V3M3 6l3 3 3-3" stroke={AC} strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round"/></svg>);}
 function MetricBlock({value,label,trend}){var isUp=trend==="up";var isDown=trend==="down";return(<div style={{marginBottom:12}}>{isUp&&<ArrowUp/>}{isDown&&<ArrowDown/>}<div style={{fontSize:22,fontWeight:700,color:TX}}>{value}</div><div style={{fontSize:12,color:MU,marginTop:2}}>{label}</div></div>);}
@@ -177,7 +179,9 @@ function CompetitorChart5Y({competitors5y,large,compact}){
   var pathD=pts.length>1?"M "+pts.map(function(p){return p.x+" "+p.y;}).join(" L "):"";
   var gridLines=[];for(var g=1;g<=4;g++){var gy=pad.t+chartH*(1-g/4);gridLines.push(<line key={g} x1={pad.l} y1={gy} x2={w-pad.r} y2={gy} stroke={GRIDLINE} strokeWidth={1} strokeDasharray="2,2" opacity={0.6}/>);}
   var wrapStyle=compact?{marginBottom:0}:{padding:16,background:CD,borderRadius:CARD_RADIUS,marginBottom:16,border:"1px solid "+BD+"30"};
-  return(<div style={wrapStyle}>{!compact&&<div style={{fontSize:11,fontWeight:800,letterSpacing:1,color:MU,marginBottom:12,textTransform:"uppercase"}}>Amount of competitors</div>}<ChartTooltip visible={tooltip.visible} x={tooltip.x} y={tooltip.y} title={tooltip.year?"Year "+tooltip.year:""} value={tooltip.value} unit="competitors"/><svg width="100%" height={h} viewBox={"0 0 "+w+" "+h} preserveAspectRatio="xMidYMid meet" style={{display:"block"}}><g>{gridLines}</g><path d={pathD} fill="none" stroke={CHART_COLOR} strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round"/>{pts.map(function(p,i){return(<g key={i} onMouseEnter={function(e){setTooltip({visible:true,x:e.clientX,y:e.clientY,year:data[i].year||"",value:String(p.v)});}} onMouseLeave={function(){setTooltip({visible:false});}}><circle cx={p.x} cy={p.y} r={5} fill={CHART_COLOR} style={{cursor:"pointer"}}/><text x={p.x} y={h-10} textAnchor="middle" fill={TX} style={{fontSize:12,fontWeight:700}}>{data[i].year||""}</text></g>);})}</svg></div>);
+  var rises=[];for(var i=1;i<data.length;i++){var prev=typeof data[i-1].count==="number"?data[i-1].count:parseInt(String(data[i-1].count).replace(/[^0-9]/g,""),10)||0;var cur=typeof data[i].count==="number"?data[i].count:parseInt(String(data[i].count).replace(/[^0-9]/g,""),10)||0;if(cur>prev){var ent=data[i].entrants;var isEst=!!data[i].isEstimate;rises.push({year:data[i].year||"",delta:cur-prev,entrants:Array.isArray(ent)?ent:[],isEstimate:isEst});}}
+  var anyEstimate=rises.some(function(r){return r.isEstimate;});
+  return(<div style={wrapStyle}>{!compact&&<div style={{fontSize:11,fontWeight:800,letterSpacing:1,color:MU,marginBottom:12,textTransform:"uppercase"}}>Amount of competitors</div>}<ChartTooltip visible={tooltip.visible} x={tooltip.x} y={tooltip.y} title={tooltip.year?"Year "+tooltip.year:""} value={tooltip.value} unit="competitors"/><svg width="100%" height={h} viewBox={"0 0 "+w+" "+h} preserveAspectRatio="xMidYMid meet" style={{display:"block"}}><g>{gridLines}</g><path d={pathD} fill="none" stroke={CHART_COLOR} strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round"/>{pts.map(function(p,i){return(<g key={i} onMouseEnter={function(e){setTooltip({visible:true,x:e.clientX,y:e.clientY,year:data[i].year||"",value:String(p.v)});}} onMouseLeave={function(){setTooltip({visible:false});}}><circle cx={p.x} cy={p.y} r={5} fill={CHART_COLOR} style={{cursor:"pointer"}}/><text x={p.x} y={h-10} textAnchor="middle" fill={TX} style={{fontSize:12,fontWeight:700}}>{data[i].year||""}</text></g>);})}</svg>{rises.length>0&&<div style={{marginTop:12,paddingTop:12,borderTop:"1px solid "+BD+"40"}}><div style={{fontSize:10,fontWeight:700,letterSpacing:0.5,color:DM,marginBottom:8,textTransform:"uppercase"}}>New entrants by year</div>{rises.map(function(r,j){var entText=r.entrants.length>0?r.entrants.join(", ")+" entered":"";var estText=r.isEstimate?" (estimate)":"";return(<div key={j} style={{fontSize:12,color:TX,marginBottom:6}}><span style={{fontWeight:700}}>{r.year}:</span> +{r.delta}{entText?" — "+entText:""}{estText}</div>);})}{anyEstimate&&<div style={{fontSize:11,color:DM,marginTop:8,fontStyle:"italic"}}>When specific entrants are unknown, counts and entrants are marked as estimates.</div>}</div>}</div>);
 }
 
 function parseRevenueNum(s){
@@ -206,7 +210,7 @@ function SpiderChart({competitors,compact,large}){
     return{name:c.name,values:[share,threat,strengths,weaknesses,revenue],color:PIE_COLORS[i%PIE_COLORS.length]};
   });
   var totalSize=large?280:220;
-  var margin=36;
+  var margin=62;
   var totalView=totalSize+2*margin;
   var padding=44;
   var cx=totalView/2;var cy=totalView/2;
@@ -231,7 +235,7 @@ function BarChartShare({competitors}){
   return(<div style={{marginTop:SPACE.lg,paddingTop:SPACE.lg,borderTop:"1px solid "+BD+"40"}}><div style={{fontSize:11,fontWeight:800,letterSpacing:1,color:MU,marginBottom:SPACE.sm,textTransform:"uppercase"}}>Share by competitor</div><div style={{display:"flex",flexDirection:"column",gap:SPACE.sm}}>{items.map(function(x,i){return(<div key={i} style={{display:"flex",alignItems:"center",gap:SPACE.sm}}><span style={{width:100,fontSize:13,fontWeight:600,color:TX,flexShrink:0,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{x.name}</span><div style={{flex:1,height:22,borderRadius:4,background:BD+"60",overflow:"hidden"}}><div style={{width:(x.pct/scale*100)+"%",height:"100%",background:x.color,borderRadius:4,transition:"width 0.3s ease",minWidth:x.pct>0?4:0}}/></div><span style={{fontSize:13,fontWeight:700,color:CHART_COLOR,width:40,textAlign:"right"}}>{x.pct+"%"}</span></div>);})}</div></div>);
 }
 
-function TabMarket({d,isMobile}){var m=d.market||{};var dp=m.dataPoints||[];var trends=m.trends||[];var risks=m.risks||[];var _dp=useState(false);var _tr=useState(false);var _rk=useState(false);var dpExpanded=_dp[0];var trExpanded=_tr[0];var rkExpanded=_rk[0];var setDp=_dp[1];var setTr=_tr[1];var setRk=_rk[1];var DP_INIT=5;var TR_INIT=3;var RK_INIT=3;var dpShow=dpExpanded?dp:dp.slice(0,DP_INIT);var trShow=trExpanded?trends:trends.slice(0,TR_INIT);var rkShow=rkExpanded?risks:risks.slice(0,RK_INIT);var dpRest=dp.length-DP_INIT;var trRest=trends.length-TR_INIT;var rkRest=risks.length-RK_INIT;var statCols=isMobile?"1fr":"1fr 1fr 1fr 1fr";var bentoCols=isMobile?"1fr":"minmax(0,1fr) minmax(0,1fr)";return(<div><Head title="Market overview"/><div style={{display:"grid",gridTemplateColumns:statCols,gap:SPACE.sm,marginBottom:SPACE.lg}}><Stat label="Global" value={parseMarketValue(m.globalSize)} trend={m.globalSizeTrend}/><Stat label="Target" value={parseMarketValue(m.targetSize)} trend={m.targetSizeTrend}/><Stat label="CAGR" value={m.cagr} color={GR}/><Stat label="Maturity" value={m.maturity}/></div><div style={{display:"grid",gridTemplateColumns:bentoCols,gap:SPACE.lg,marginBottom:SPACE.lg}}><BentoCard title="Market development (5 years)"><MarketChart5Y history5y={m.history5y} large={!isMobile} compact={true}/></BentoCard><BentoCard title="Data points"><div style={{fontSize:10,color:DM,marginBottom:8,display:"flex",alignItems:"center",gap:12}}><span style={{display:"inline-flex",alignItems:"center",gap:4}}><span style={{color:GR}}>●</span> Verified</span><span style={{display:"inline-flex",alignItems:"center",gap:4}}><span style={{color:YL}}>○</span> Assumption</span></div><div style={{marginBottom:8}}>{dpShow.map(function(r,i){return <DataPointRow key={i} r={r}/>;})}{dpExpanded&&dpRest>0?(<button type="button" onClick={function(){setDp(false);}} style={{fontSize:11,color:MU,marginTop:8,background:"none",border:"none",cursor:"pointer",padding:0}}>Show less</button>):<ShowMoreBtn count={dpRest} onClick={function(){setDp(true);}} label={dpRest>0?"Show "+dpRest+" more":null}/>}</div></BentoCard></div><Collapsible title="Trends" defaultOpen={false}><div>{trShow.map(function(t,i){return <TrendRiskRow key={i} item={t} accentColor={GR}/>;})}{trExpanded&&trRest>0?(<button type="button" onClick={function(){setTr(false);}} style={{fontSize:11,color:MU,marginTop:8,background:"none",border:"none",cursor:"pointer",padding:0}}>Show less</button>):<ShowMoreBtn count={trRest} onClick={function(){setTr(true);}} label={trRest>0?"Show "+trRest+" more":null}/>}</div></Collapsible><Collapsible title="Risks" defaultOpen={false}><div>{rkShow.map(function(r,i){return <TrendRiskRow key={i} item={r} accentColor={RD}/>;})}{rkExpanded&&rkRest>0?(<button type="button" onClick={function(){setRk(false);}} style={{fontSize:11,color:MU,marginTop:8,background:"none",border:"none",cursor:"pointer",padding:0}}>Show less</button>):<ShowMoreBtn count={rkRest} onClick={function(){setRk(true);}} label={rkRest>0?"Show "+rkRest+" more":null}/>}</div></Collapsible></div>);}
+function TabMarket({d,isMobile}){var m=d.market||{};var dp=m.dataPoints||[];var trends=m.trends||[];var risks=m.risks||[];var _dp=useState(false);var _tr=useState(false);var _rk=useState(false);var dpExpanded=_dp[0];var trExpanded=_tr[0];var rkExpanded=_rk[0];var setDp=_dp[1];var setTr=_tr[1];var setRk=_rk[1];var DP_INIT=5;var TR_INIT=3;var RK_INIT=3;var dpShow=dpExpanded?dp:dp.slice(0,DP_INIT);var trShow=trExpanded?trends:trends.slice(0,TR_INIT);var rkShow=rkExpanded?risks:risks.slice(0,RK_INIT);var dpRest=dp.length-DP_INIT;var trRest=trends.length-TR_INIT;var rkRest=risks.length-RK_INIT;var statCols=isMobile?"1fr":"1fr 1fr 1fr 1fr";var bentoCols=isMobile?"1fr":"minmax(0,1fr) minmax(0,1fr)";return(<div><Head title="Market overview"/><div style={{display:"grid",gridTemplateColumns:statCols,gap:SPACE.sm,marginBottom:SPACE.lg}}><Stat label="Global" value={parseMarketValue(m.globalSize)} trend={m.globalSizeTrend}/><Stat label="Target" value={parseMarketValue(m.targetSize)} trend={m.targetSizeTrend}/><Stat label="CAGR" value={parseCagr(m.cagr)} color={GR}/><Stat label="Maturity" value={parseMaturity(m.maturity)}/></div><div style={{display:"grid",gridTemplateColumns:bentoCols,gap:SPACE.lg,marginBottom:SPACE.lg}}><BentoCard title="Market development (5 years)"><MarketChart5Y history5y={m.history5y} large={!isMobile} compact={true}/></BentoCard><BentoCard title="Data points"><div style={{fontSize:10,color:DM,marginBottom:8,display:"flex",alignItems:"center",gap:12}}><span style={{display:"inline-flex",alignItems:"center",gap:4}}><span style={{color:GR}}>●</span> Verified</span><span style={{display:"inline-flex",alignItems:"center",gap:4}}><span style={{color:YL}}>○</span> Assumption</span></div><div style={{marginBottom:8}}>{dpShow.map(function(r,i){return <DataPointRow key={i} r={r}/>;})}{dpExpanded&&dpRest>0?(<button type="button" onClick={function(){setDp(false);}} style={{fontSize:11,color:MU,marginTop:8,background:"none",border:"none",cursor:"pointer",padding:0}}>Show less</button>):<ShowMoreBtn count={dpRest} onClick={function(){setDp(true);}} label={dpRest>0?"Show "+dpRest+" more":null}/>}</div></BentoCard></div><Collapsible title="Trends" defaultOpen={false}><div>{trShow.map(function(t,i){return <TrendRiskRow key={i} item={t} accentColor={GR}/>;})}{trExpanded&&trRest>0?(<button type="button" onClick={function(){setTr(false);}} style={{fontSize:11,color:MU,marginTop:8,background:"none",border:"none",cursor:"pointer",padding:0}}>Show less</button>):<ShowMoreBtn count={trRest} onClick={function(){setTr(true);}} label={trRest>0?"Show "+trRest+" more":null}/>}</div></Collapsible><Collapsible title="Risks" defaultOpen={false}><div>{rkShow.map(function(r,i){return <TrendRiskRow key={i} item={r} accentColor={RD}/>;})}{rkExpanded&&rkRest>0?(<button type="button" onClick={function(){setRk(false);}} style={{fontSize:11,color:MU,marginTop:8,background:"none",border:"none",cursor:"pointer",padding:0}}>Show less</button>):<ShowMoreBtn count={rkRest} onClick={function(){setRk(true);}} label={rkRest>0?"Show "+rkRest+" more":null}/>}</div></Collapsible></div>);}
 
 function CompetitorCard({x,tc}){
   var _sw=useState(false);var showSW=_sw[0];var setSW=_sw[1];
@@ -353,6 +357,7 @@ export default function App(){
   var _l=useState(false);var loading=_l[0];var setLoading=_l[1];
   var _e=useState(null);var err=_e[0];var setErr=_e[1];
   var _tier=useState("free");var tier=_tier[0];var setTier=_tier[1];
+  var _freeUsed=useState(null);var freeAnalysesUsed=_freeUsed[0];var setFreeAnalysesUsed=_freeUsed[1];
   var _deep=useState(false);var deep=_deep[0];var setDeep=_deep[1];
   var _usage=useState(null);var usage=_usage[0];var setUsage=_usage[1];
   var _sample=useState(false);var isSampleData=_sample[0];var setIsSampleData=_sample[1];
@@ -367,8 +372,8 @@ export default function App(){
   var deepUsed=usage?.deep_count||0;
   var standardUsed=usage?.standard_count||0;
   var standardLimit=admin?50:tier==="business"?50:tier==="pro"?10:1;
-  var quotaExhausted=!admin&&tier==="free"&&standardUsed>=1;
-  useEffect(function(){if(session?.access_token){fetch("/api/profile",{headers:{Authorization:"Bearer "+session.access_token}}).then(function(r){return r.json();}).then(function(d){if(d.tier)setTier(d.tier);}).catch(function(){});}},[session]);
+  var quotaExhausted=!admin&&tier==="free"&&(freeAnalysesUsed!=null?freeAnalysesUsed>=1:standardUsed>=1);
+  useEffect(function(){if(session?.access_token){fetch("/api/profile",{headers:{Authorization:"Bearer "+session.access_token}}).then(function(r){return r.json();}).then(function(d){if(d.tier)setTier(d.tier);if(d.free_analyses_used!=null)setFreeAnalysesUsed(d.free_analyses_used);}).catch(function(){});}},[session]);
   useEffect(function(){if(!user||!session)return;var m=new Date().toISOString().slice(0,7);supabase.from("usage").select("standard_count, deep_count").eq("user_id",user.id).eq("month",m).maybeSingle().then(function(r){setUsage(r.data);}).catch(function(){});},[user,session]);
   useEffect(function(){if(ref.current)ref.current.focus();},[data,loading]);
 
@@ -397,7 +402,7 @@ export default function App(){
         throw new Error(res.error);
       }
       setData(res);
-      if(user){var m=new Date().toISOString().slice(0,7);supabase.from("usage").select("standard_count, deep_count").eq("user_id",user.id).eq("month",m).maybeSingle().then(function(r){setUsage(r.data);});}
+      if(user){var m=new Date().toISOString().slice(0,7);supabase.from("usage").select("standard_count, deep_count").eq("user_id",user.id).eq("month",m).maybeSingle().then(function(r){setUsage(r.data);});if(session?.access_token)fetch("/api/profile",{headers:{Authorization:"Bearer "+session.access_token}}).then(function(r){return r.json();}).then(function(d){if(d.free_analyses_used!=null)setFreeAnalysesUsed(d.free_analyses_used);});}
     })
     .catch(function(e){setErr(e.message);})
     .finally(function(){setLoading(false);});}
@@ -431,11 +436,11 @@ export default function App(){
   return(
     <>
       {hasResults?(
-        <div style={{padding:isMobile?"12px 16px":"16px 24px",borderBottom:"1px solid "+BD+"40"}}>
-          <div style={{maxWidth:CONTENT_MAX_WIDTH,margin:"0 auto"}}>{searchBar}</div>
+        <div style={{padding:isMobile?"12px 10px":"16px 24px",borderBottom:"1px solid "+BD+"40",width:"100%",minWidth:0,boxSizing:"border-box"}}>
+          <div style={{width:"100%",maxWidth:CONTENT_MAX_WIDTH,margin:"0 auto",minWidth:0}}>{searchBar}</div>
         </div>
       ):(
-        <div style={{flex:1,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",minHeight:isMobile?"70vh":"75vh",padding:isMobile?"20px 16px":"32px 24px"}}>
+        <div style={{flex:1,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",minHeight:isMobile?"70vh":"75vh",padding:isMobile?"20px 10px":"32px 24px",width:"100%",minWidth:0,boxSizing:"border-box"}}>
           <div style={{display:"flex",flexDirection:"column",alignItems:"center",marginBottom:isMobile?24:32}}>
             <LumeLogo size={isMobile?44:56}/>
             <div style={{fontWeight:800,fontSize:isMobile?24:28,letterSpacing:0.5,color:TX,textTransform:"uppercase",marginTop:12}}>Lume</div>
@@ -446,7 +451,7 @@ export default function App(){
             {["Meal kits Denmark","Dog food EU","SaaS accounting"].map(function(ex,i){return(<button key={i} onClick={function(){setIdea(ex);tryWithSample(ex);}} style={{padding:"10px 18px",background:CD,border:"1px solid "+BD,borderRadius:BTN_RADIUS,fontSize:12,fontWeight:600,color:MU,cursor:"pointer",transition:"all 0.15s"}}>{ex}</button>);})}
           </div>
           {!user&&<div style={{marginTop:20,fontSize:12,color:DM,textAlign:"center"}}>Sign up free to run your first analysis, or explore sample data above.</div>}
-          {user&&tier==="free"&&!quotaExhausted&&<div style={{marginTop:20,fontSize:12,color:GR,textAlign:"center"}}>You have 1 free analysis — try it out!</div>}
+          {user&&tier==="free"&&!quotaExhausted&&<div style={{marginTop:20,fontSize:12,color:GR,textAlign:"center"}}>You have 1 free analysis (one-time) — try it out!</div>}
           {user&&quotaExhausted&&<div style={{marginTop:20,fontSize:12,color:AC,textAlign:"center"}}>Free analysis used. <span onClick={function(){router.push("/pricing");}} style={{textDecoration:"underline",cursor:"pointer"}}>Upgrade to Pro</span> for more research.</div>}
         </div>
       )}
@@ -473,7 +478,7 @@ export default function App(){
 
 var TABS=["market","product","competitor","assumptions","legal"];
 function TabBar({active,onChange,isMobile}){
-  return(<div className={isMobile?"lume-tabs-scroll":undefined} style={{display:"flex",gap:SPACE.sm,padding:isMobile?SPACE.sm+"px "+SPACE.md+"px":SPACE.md+"px "+SPACE.xl+"px",borderTop:"1px solid "+BD+"40",borderBottom:"1px solid "+BD+"40",flexWrap:"nowrap",overflowX:"auto",WebkitOverflowScrolling:"touch"}}>
+  return(<div className={isMobile?"lume-tabs-scroll":undefined} style={{display:"flex",gap:SPACE.sm,padding:isMobile?SPACE.sm+"px "+SPACE.md+"px":SPACE.md+"px "+SPACE.xl+"px",borderTop:"1px solid "+BD+"40",borderBottom:"1px solid "+BD+"40",flexWrap:isMobile?"nowrap":"wrap",overflowX:isMobile?"auto":"visible",WebkitOverflowScrolling:"touch",background:CD,minHeight:44}}>
     {TABS.map(function(t){var isActive=active===t;return(<button key={t} type="button" onClick={function(){onChange(t);}} style={{padding:isMobile?"10px 14px":SPACE.sm+"px "+SPACE.lg+"px",fontSize:12,fontWeight:600,color:isActive?TX:MU,background:isActive?AC+"18":"transparent",border:"none",borderBottom:isActive?"2px solid "+AC:"2px solid transparent",borderRadius:BTN_RADIUS,cursor:"pointer",textTransform:"capitalize",marginBottom:0,flexShrink:0}}>{t}</button>);})}
   </div>);
 }
@@ -490,7 +495,7 @@ export function AnalysisResultView({data,isSampleData}){
   var sm=data?(data.summary||{}):{};
   var vc={"HIGH POTENTIAL":GR,MODERATE:YL,RISKY:RD,NICHE:CN};
   var tabContent={market:<TabMarket d={data} isMobile={isMobile}/>,product:<TabProd d={data} isMobile={isMobile}/>,competitor:<TabComp d={data} isMobile={isMobile}/>,assumptions:<TabAssume d={data}/>,legal:<TabLegal d={data}/>};
-  return(<div style={{maxWidth:CONTENT_MAX_WIDTH,margin:"0 auto",padding:isMobile?SPACE.md:SPACE.xl,display:"flex",flexDirection:"column"}}>
+  return(<div style={{width:"100%",maxWidth:CONTENT_MAX_WIDTH,margin:"0 auto",padding:isMobile?SPACE.md:SPACE.xl,display:"flex",flexDirection:"column",minWidth:0,boxSizing:"border-box"}}>
     <div style={{paddingBottom:0}}>
       <BentoCard title="Summary" span="span 1">
         <div style={{display:"flex",alignItems:"flex-start",gap:isMobile?SPACE.md:SPACE.xl,flexWrap:"wrap"}}>
@@ -506,7 +511,7 @@ export function AnalysisResultView({data,isSampleData}){
         </div>
       </BentoCard>
     </div>
-    <TabBar active={activeTab} onChange={setActiveTab} isMobile={isMobile}/>
+    <div style={{flexShrink:0,overflow:"visible"}}><TabBar active={activeTab} onChange={setActiveTab} isMobile={isMobile}/></div>
     <div style={{paddingTop:isMobile?SPACE.md:SPACE.lg}}>
       <BentoCard title={activeTab.charAt(0).toUpperCase()+activeTab.slice(1)}>{tabContent[activeTab]}</BentoCard>
     </div>
