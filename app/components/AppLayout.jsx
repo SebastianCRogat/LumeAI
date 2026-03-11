@@ -1,7 +1,7 @@
 "use client";
 import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { useAuth } from "@/app/context/AuthContext";
 import { supabase } from "@/lib/supabase";
 import { useIsMobile } from "@/lib/useMediaQuery";
@@ -90,19 +90,24 @@ function IconPricing() {
   );
 }
 
-export default function AppLayout({ children }) {
-  const pathname = usePathname();
+function AuthModalFromUrl({ pathname, onOpen, onSetMode }) {
   const searchParams = useSearchParams();
-  const { user, displayName } = useAuth();
-  const [showAuth, setShowAuth] = useState(false);
-  const [navOpen, setNavOpen] = useState(false);
-  const isMobile = useIsMobile();
-
   useEffect(() => {
     if (pathname === "/" && (searchParams.get("signin") === "1" || searchParams.get("signup") === "1")) {
-      setShowAuth(true);
+      onSetMode(searchParams.get("signup") === "1" ? "signup" : "signin");
+      onOpen();
     }
-  }, [pathname, searchParams]);
+  }, [pathname, searchParams, onOpen, onSetMode]);
+  return null;
+}
+
+export default function AppLayout({ children }) {
+  const pathname = usePathname();
+  const { user, displayName } = useAuth();
+  const [showAuth, setShowAuth] = useState(false);
+  const [authInitialMode, setAuthInitialMode] = useState("signin");
+  const [navOpen, setNavOpen] = useState(false);
+  const isMobile = useIsMobile();
 
   const isResearch = pathname === "/";
   const isDashboard = pathname === "/dashboard";
@@ -145,7 +150,7 @@ export default function AppLayout({ children }) {
       <Link href="/pricing" onClick={() => isMobile && setNavOpen(false)} style={{ fontSize: 12, fontWeight: 600, color: MU, textDecoration: "none", padding: "8px 14px", background: CD, borderRadius: BTN_RADIUS }}>
         Pricing
       </Link>
-      <button onClick={() => { setShowAuth(true); setNavOpen(false); }} style={{ padding: "8px 18px", background: AC, color: BG, border: "none", borderRadius: BTN_RADIUS, fontWeight: 700, fontSize: 12, cursor: "pointer" }}>
+      <button onClick={() => { setAuthInitialMode("signin"); setShowAuth(true); setNavOpen(false); }} style={{ padding: "8px 18px", background: AC, color: BG, border: "none", borderRadius: BTN_RADIUS, fontWeight: 700, fontSize: 12, cursor: "pointer" }}>
         Sign in
       </button>
     </>
@@ -259,11 +264,14 @@ export default function AppLayout({ children }) {
         )}
         </div>
 
+        <Suspense fallback={null}>
+          <AuthModalFromUrl pathname={pathname} onOpen={() => setShowAuth(true)} onSetMode={setAuthInitialMode} />
+        </Suspense>
         {showAuth && (
           <AuthModal
             onClose={() => setShowAuth(false)}
             onSuccess={() => setShowAuth(false)}
-            initialMode={searchParams.get("signup") === "1" ? "signup" : "signin"}
+            initialMode={authInitialMode}
           />
         )}
 
