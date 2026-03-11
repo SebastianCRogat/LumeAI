@@ -121,11 +121,11 @@ export default function DashboardPage() {
             <div style={{ padding: 20, background: CD, border: "1px solid " + BD, borderRadius: CARD_RADIUS, boxShadow: "0 4px 24px rgba(0,0,0,0.4)" }}>
               <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: 1.2, color: DM, marginBottom: 8, textTransform: "uppercase" }}>Deep research</div>
               <div style={{ fontSize: 24, fontWeight: 700, color: AC }}>{usage.deep_count || 0}</div>
-              <div style={{ fontSize: 12, color: MU }}>/ {(isAdmin(user) ? 5 : tier === "pro" ? 1 : tier === "business" ? 5 : 0)} this month</div>
+              <div style={{ fontSize: 12, color: MU }}>/ {(isAdmin(user) ? 5 : tier === "pro" || tier === "starterkit" ? 1 : tier === "business" ? 5 : 0)} this month</div>
             </div>
             <div style={{ padding: 20, background: CD, border: "1px solid " + BD, borderRadius: CARD_RADIUS, boxShadow: "0 4px 24px rgba(0,0,0,0.4)" }}>
               <div style={{ fontSize: 10, fontWeight: 800, letterSpacing: 1.2, color: DM, marginBottom: 8, textTransform: "uppercase" }}>{tier} tier</div>
-              <div style={{ fontSize: 24, fontWeight: 700, color: GR }}>{tier === "pro" ? 10 : tier === "business" ? 50 : 0}</div>
+              <div style={{ fontSize: 24, fontWeight: 700, color: GR }}>{tier === "pro" ? 10 : tier === "starterkit" ? 5 : tier === "business" ? 50 : 0}</div>
               <div style={{ fontSize: 12, color: MU }}>analyses/month</div>
               {tier === "free" && (
                 <Link href="/pricing" style={{ display: "block", marginTop: 8, fontSize: 11, color: AC, textDecoration: "none" }}>Upgrade for more →</Link>
@@ -135,7 +135,7 @@ export default function DashboardPage() {
                   {upgrading ? "..." : "Grant Pro (admin)"}
                 </button>
               )}
-              {(tier === "pro" || tier === "business") && (
+              {(tier === "pro" || tier === "starterkit" || tier === "business") && (
                 <button onClick={openBillingPortal} disabled={portalLoading} style={{ display: "block", marginTop: 8, fontSize: 11, color: MU, background: "none", border: "none", cursor: portalLoading ? "wait" : "pointer", padding: 0, textDecoration: "underline" }}>
                   {portalLoading ? "..." : "Manage subscription"}
                 </button>

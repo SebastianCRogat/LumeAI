@@ -35,7 +35,19 @@ export async function POST(request) {
     if (event.type === "checkout.session.completed") {
       const session = event.data.object;
       const userId = session.metadata?.user_id;
-      if (userId && session.subscription) {
+      if (!userId) return NextResponse.json({ received: true });
+
+      if (session.mode === "payment") {
+        const sessionWithLines = await stripe.checkout.sessions.retrieve(session.id, { expand: ["line_items.data.price"] });
+        const priceId = sessionWithLines.line_items?.data?.[0]?.price?.id;
+        const starterkitPriceId = process.env.NEXT_PUBLIC_STRIPE_PRICE_STARTERKIT;
+        if (starterkitPriceId && priceId === starterkitPriceId) {
+          await supabaseAdmin.from("profiles").update({ tier: "starterkit" }).eq("id", userId);
+        }
+        return NextResponse.json({ received: true });
+      }
+
+      if (session.subscription) {
         const sub = await stripe.subscriptions.retrieve(session.subscription);
         const priceId = sub.items.data[0]?.price.id;
         const tier = priceId === process.env.NEXT_PUBLIC_STRIPE_PRICE_BUSINESS ? "business" : "pro";

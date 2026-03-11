@@ -88,7 +88,7 @@ export async function POST(request) {
 
   // API key only from env; never expose to client (OWASP: secure key handling)
   const apiKey = process.env.ANTHROPIC_API_KEY;
-  const useOpus = isDeep || tier === "pro" || tier === "business" || userId === FULL_ACCESS_USER_ID;
+  const useOpus = isDeep || tier === "pro" || tier === "starterkit" || tier === "business" || userId === FULL_ACCESS_USER_ID;
   const isFree = tier === "free" && userId !== FULL_ACCESS_USER_ID;
   const model = isFree ? "claude-haiku-4-5" : (useOpus ? "claude-opus-4-6" : "claude-haiku-4-5");
   const maxTokens = isDeep ? 16000 : 8000;

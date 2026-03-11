@@ -3,12 +3,16 @@ import { useState, useEffect, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { useAuth } from "@/app/context/AuthContext";
 import AppLayout from "@/app/components/AppLayout";
-import { BG, PN, CD, BD, AC, TX, MU, DM, GR, BL, CARD_RADIUS } from "@/lib/theme";
+import { useIsMobile } from "@/lib/useMediaQuery";
+import { BG, PN, CD, BD, AC, TX, MU, DM, GR, BL, CN, CARD_RADIUS } from "@/lib/theme";
+
+const STARTERKIT_PRICE_ID = process.env.NEXT_PUBLIC_STRIPE_PRICE_STARTERKIT || "price_1T9WNjQTnSfLQqpf6FmXdSh7";
 
 const PLANS = [
   { id: "free", name: "Free", price: "$0", period: "/month", standard: 1, deep: 0, model: "Claude Haiku", features: ["1 free analysis ever (one-time)", "Basic AI model (Haiku)", "Explore sample analyses", "Upgrade to Pro for full power"], cta: "Free", highlight: false },
-  { id: "pro", name: "Pro", price: "$39", period: "/month", standard: 10, deep: 1, model: "Claude Opus", features: ["10 analyses + 1 deep research/month", "Full competitor analysis", "Pie chart & ad snapshots", "Verified sources & links", "Analysis history"], cta: "Upgrade to Pro", highlight: true, priceId: process.env.NEXT_PUBLIC_STRIPE_PRICE_PRO },
-  { id: "business", name: "Business", price: "$99", period: "/month", standard: 50, deep: 5, model: "Claude Opus", features: ["50 analyses + 5 deep research/month", "Everything in Pro", "5× more analyses", "5× more deep research"], cta: "Upgrade to Business", highlight: false, priceId: process.env.NEXT_PUBLIC_STRIPE_PRICE_BUSINESS },
+  { id: "starterkit", name: "Starterkit", price: "$5", period: " one-time", standard: 5, deep: 1, model: "Claude Opus", features: ["5 market analyses (one-time)", "Full competitor analysis", "Same power as Pro", "Analysis history", "Limited offer"], cta: "Get Starterkit", highlight: true, priceId: STARTERKIT_PRICE_ID, oneTime: true, limited: true, buttonColor: AC },
+  { id: "pro", name: "Pro", price: "$39", period: "/month", standard: 10, deep: 1, model: "Claude Opus", features: ["10 analyses + 1 deep research/month", "Full competitor analysis", "Pie chart & ad snapshots", "Verified sources & links", "Analysis history"], cta: "Upgrade to Pro", highlight: false, priceId: process.env.NEXT_PUBLIC_STRIPE_PRICE_PRO, buttonColor: BL },
+  { id: "business", name: "Business", price: "$99", period: "/month", standard: 50, deep: 5, model: "Claude Opus", features: ["50 analyses + 5 deep research/month", "Everything in Pro", "5× more analyses", "5× more deep research"], cta: "Upgrade to Business", highlight: false, priceId: process.env.NEXT_PUBLIC_STRIPE_PRICE_BUSINESS, buttonColor: GR },
 ];
 
 function fetchTier(session) {
@@ -20,6 +24,7 @@ function fetchTier(session) {
 function PricingContent() {
   const searchParams = useSearchParams();
   const { user, session, loading: authLoading } = useAuth();
+  const isMobile = useIsMobile();
   const [tier, setTier] = useState("free");
   const [loading, setLoading] = useState(null);
 
@@ -55,7 +60,7 @@ function PricingContent() {
   async function handleUpgrade(plan) {
     const priceId = plan.priceId;
     if (!priceId) {
-      alert("Stripe price not configured. Add NEXT_PUBLIC_STRIPE_PRICE_PRO and NEXT_PUBLIC_STRIPE_PRICE_BUSINESS to .env.local");
+      alert("Stripe price not configured. Add NEXT_PUBLIC_STRIPE_PRICE_STARTERKIT, NEXT_PUBLIC_STRIPE_PRICE_PRO, and NEXT_PUBLIC_STRIPE_PRICE_BUSINESS to .env.local");
       return;
     }
     if (!user || !session) {
@@ -71,6 +76,7 @@ function PricingContent() {
           priceId,
           successUrl: window.location.origin + "/pricing?success=1",
           cancelUrl: window.location.origin + "/pricing",
+          mode: plan.oneTime ? "payment" : "subscription",
         }),
       });
       const data = await res.json();
@@ -85,11 +91,11 @@ function PricingContent() {
 
   return (
     <AppLayout>
-      <div style={{ maxWidth: 900, margin: "0 auto", padding: 40, flex: 1 }}>
+      <div style={{ maxWidth: isMobile ? 900 : 1200, margin: "0 auto", padding: isMobile ? 24 : 40, flex: 1 }}>
         <h1 style={{ fontSize: 28, fontWeight: 800, textAlign: "center", marginBottom: 8 }}>Pricing</h1>
         <p style={{ fontSize: 14, color: MU, textAlign: "center", marginBottom: 40 }}>Choose the plan that fits your research needs</p>
 
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 16, alignItems: "stretch" }}>
+        <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "repeat(4, 1fr)", gap: 16, alignItems: "stretch" }}>
           {PLANS.map((plan) => (
             <div
               key={plan.id}
@@ -103,7 +109,12 @@ function PricingContent() {
                 flexDirection: "column",
               }}
             >
-              <div style={{ fontSize: 14, fontFamily: "monospace", fontWeight: 700, color: AC, marginBottom: 8 }}>{plan.name.toUpperCase()}</div>
+              {plan.limited && (
+                <div style={{ position: "absolute", top: 0, right: 0, background: "linear-gradient(135deg, #f97316 0%, #ea580c 100%)", color: "#fff", fontSize: 10, fontWeight: 800, letterSpacing: "0.15em", padding: "6px 12px", borderRadius: "0 " + CARD_RADIUS + "px 0 8px", boxShadow: "0 2px 8px rgba(249,115,22,0.4)" }}>
+                  LIMITED
+                </div>
+              )}
+              <div style={{ fontSize: 14, fontFamily: "monospace", fontWeight: 700, color: AC, marginBottom: 8, paddingRight: plan.limited ? 72 : 0 }}>{plan.name.toUpperCase()}</div>
               <div style={{ fontSize: 32, fontWeight: 800, marginBottom: 4 }}>{plan.price}<span style={{ fontSize: 14, fontWeight: 400, color: MU }}>{plan.period}</span></div>
               <div style={{ fontSize: 12, color: DM, marginBottom: 16 }}>{plan.model}</div>
               <ul style={{ listStyle: "none", padding: 0, margin: 0, flex: 1 }}>
@@ -118,8 +129,9 @@ function PricingContent() {
                 disabled={plan.id === "free" || tier === plan.id || loading}
                 style={{
                   width: "100%",
-                  padding: "12px",
-                  background: plan.id === "free" || tier === plan.id ? BD : plan.highlight ? AC : BL,
+                  minHeight: 44,
+                  padding: "12px 16px",
+                  background: plan.id === "free" || tier === plan.id ? BD : (plan.buttonColor || BL),
                   color: plan.id === "free" || tier === plan.id ? DM : BG,
                   border: "none",
                   borderRadius: 4,

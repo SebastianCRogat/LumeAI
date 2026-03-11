@@ -31,7 +31,7 @@ export async function POST(request) {
   if ("error" in validated) {
     return NextResponse.json({ error: validated.error }, { status: validated.status });
   }
-  const { priceId, successUrl, cancelUrl } = validated;
+  const { priceId, successUrl, cancelUrl, mode } = validated;
 
   try {
     const stripe = getStripe();
@@ -48,15 +48,19 @@ export async function POST(request) {
       await supabase.from("profiles").update({ stripe_customer_id: customerId }).eq("id", user.id);
     }
 
-    const session = await stripe.checkout.sessions.create({
+    const sessionConfig = {
       customer: customerId,
-      mode: "subscription",
+      mode,
       line_items: [{ price: priceId, quantity: 1 }],
       success_url: successUrl,
       cancel_url: cancelUrl,
       metadata: { user_id: user.id },
-      subscription_data: { metadata: { user_id: user.id } },
-    });
+    };
+    if (mode === "subscription") {
+      sessionConfig.subscription_data = { metadata: { user_id: user.id } };
+    }
+
+    const session = await stripe.checkout.sessions.create(sessionConfig);
 
     return NextResponse.json({ url: session.url });
   } catch (e) {

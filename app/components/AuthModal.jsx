@@ -3,8 +3,8 @@ import { useState } from "react";
 import { supabase } from "@/lib/supabase";
 import { BG, PN, CD, BD, TX, MU, DM, AC, RD, GR, BTN_RADIUS, CARD_RADIUS } from "@/lib/theme";
 
-export default function AuthModal({ onClose, onSuccess }) {
-  const [mode, setMode] = useState("signin");
+export default function AuthModal({ onClose, onSuccess, initialMode }) {
+  const [mode, setMode] = useState(initialMode === "signup" ? "signup" : "signin");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);

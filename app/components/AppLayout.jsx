@@ -1,7 +1,7 @@
 "use client";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
-import { useState } from "react";
+import { usePathname, useSearchParams } from "next/navigation";
+import { useState, useEffect } from "react";
 import { useAuth } from "@/app/context/AuthContext";
 import { supabase } from "@/lib/supabase";
 import { useIsMobile } from "@/lib/useMediaQuery";
@@ -92,10 +92,17 @@ function IconPricing() {
 
 export default function AppLayout({ children }) {
   const pathname = usePathname();
+  const searchParams = useSearchParams();
   const { user, displayName } = useAuth();
   const [showAuth, setShowAuth] = useState(false);
   const [navOpen, setNavOpen] = useState(false);
   const isMobile = useIsMobile();
+
+  useEffect(() => {
+    if (pathname === "/" && (searchParams.get("signin") === "1" || searchParams.get("signup") === "1")) {
+      setShowAuth(true);
+    }
+  }, [pathname, searchParams]);
 
   const isResearch = pathname === "/";
   const isDashboard = pathname === "/dashboard";
@@ -256,6 +263,7 @@ export default function AppLayout({ children }) {
           <AuthModal
             onClose={() => setShowAuth(false)}
             onSuccess={() => setShowAuth(false)}
+            initialMode={searchParams.get("signup") === "1" ? "signup" : "signin"}
           />
         )}
 
